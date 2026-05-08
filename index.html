@@ -634,6 +634,8 @@
         let timeLeft = TIME_LIMIT;
         let lives = 3;
         let roundLocked = false;
+        let allLevelsMixed = true;
+        let currentLevelUsedIngredients = new Set();
 
         function renderFraction(n, d) {
             if (n === d && n === 1) return `<span style="font-size: 1.2em; font-weight: 900; vertical-align: middle; margin: 0 4px;">가득(1)</span>`;
@@ -728,8 +730,11 @@
             updateLivesUI();
             
             const isFull = (level.target.n === level.target.d);
-            const suffix = isFull ? '<br>' : ' 만큼<br>정확히 ';
-            document.getElementById('target-text').innerHTML = `재료를 <span class="text-yellow-300 mx-1 text-3xl">${renderFraction(level.target.n, level.target.d)}</span>${suffix}채워주세요!`;
+            if (isFull) {
+                document.getElementById('target-text').innerHTML = `재료를 <span class="text-yellow-300 mx-1 text-3xl">${renderFraction(level.target.n, level.target.d)}</span><br>채워주세요!`;
+            } else {
+                document.getElementById('target-text').innerHTML = `재료를 <span class="text-yellow-300 mx-1 text-3xl">${renderFraction(level.target.n, level.target.d)}</span> 만큼<br>정확히 채워주세요!`;
+            }
             
             const markingsContainer = document.getElementById('markings-container');
             markingsContainer.innerHTML = '';
@@ -791,6 +796,9 @@
             const value = ing.n / ing.d;
             currentAmount += value;
             
+            // Track distinct ingredients used in this level
+            currentLevelUsedIngredients.add(`${ing.n}/${ing.d}_${ing.color}`);
+            
             const liquidContainer = document.getElementById('liquid-container');
             const liquid = document.createElement('div');
             liquid.className = 'liquid-layer';
@@ -817,6 +825,7 @@
         function resetBottle() {
             currentAmount = 0;
             document.getElementById('liquid-container').innerHTML = '';
+            currentLevelUsedIngredients.clear();
         }
 
         function showModal(msg, isRetry, isGameClear = false) {
@@ -897,12 +906,22 @@
             const targetAmount = level.target.n / level.target.d;
             
             if (Math.abs(currentAmount - targetAmount) < 0.001) {
+                // 서로 다른 종류의 재료를 2개 이상 섞었는지 확인
+                if (currentLevelUsedIngredients.size <= 1) {
+                    allLevelsMixed = false;
+                }
+
                 playSound('success');
                 if (currentLevelIndex >= levels.length - 1) {
                     createFinalSparkles();
                     stopBGM();
                     playSound('gameclear');
-                    showModal("대단해!\n모든 레벨을 완벽히\n클리어했어!", false, true);
+                    
+                    if (allLevelsMixed) {
+                        showModal("완벽해!\n분수를 완벽하게\n마스터했어!", false, true);
+                    } else {
+                        showModal("대단해!\n모든 레벨을 클리어했어!\n다음엔 여러 분수를\n섞어서 클리어 해보자.", false, true);
+                    }
                 } else {
                     createSparkles();
                     showModal("완벽해!\n원하는 분수를 정확히\n만들었어!", false, false);
@@ -924,6 +943,7 @@
             currentLevelIndex = 0;
             lives = 3;
             roundLocked = false;
+            allLevelsMixed = true; // 게임 시작 시 초기화
             updateLivesUI();
             playBGM();
             loadLevel(0);
@@ -937,6 +957,7 @@
             currentLevelIndex = 0;
             lives = 3;
             roundLocked = false;
+            allLevelsMixed = true;
             updateLivesUI();
             resetBottle();
         }

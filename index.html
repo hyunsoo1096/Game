@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>마법 물약 상점 (The Magic Potion Shop)</title>
+    <title>마법의 분수 공방</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
@@ -156,17 +156,13 @@
                 height: 14px;
             }
             .marking-label {
-                right: -58px !important;
-                left: auto !important;
-                font-size: 0.78rem !important;
+                right: -55px;
+                font-size: 0.8rem;
             }
+            /* Alternate markings left and right on mobile */
             .marking:nth-child(odd) .marking-label {
-                left: -58px !important;
-                right: auto !important;
-            }
-            .marking:nth-child(even) .marking-label {
-                right: -58px !important;
-                left: auto !important;
+                left: -55px;
+                right: auto;
             }
             #app {
                 padding: 0.75rem !important;
@@ -192,7 +188,7 @@
         
         <!-- Title and Buttons -->
         <div class="relative z-20 flex flex-col items-center">
-            <h1 class="text-5xl sm:text-7xl font-black text-yellow-300 drop-shadow-[0_5px_15px_rgba(0,0,0,0.9)] mb-12 text-center">마법 물약 상점 🧪</h1>
+            <h1 class="text-5xl sm:text-7xl font-black text-yellow-300 drop-shadow-[0_5px_15px_rgba(0,0,0,0.9)] mb-12 text-center">마법의 분수 공방 🧪</h1>
             <div class="flex flex-col gap-6 w-full max-w-md px-6">
                 <button onclick="startGame()" class="bg-green-500 hover:bg-green-400 text-white font-bold py-5 px-8 rounded-2xl border-2 border-white shadow-[0_8px_0_#2e7d32] active:translate-y-2 active:shadow-none transition-all text-2xl cursor-pointer">
                     게임 시작하기
@@ -209,7 +205,7 @@
         <div class="bg-purple-900 border-4 border-yellow-400 rounded-3xl p-8 max-w-lg w-full text-center shadow-[0_0_40px_rgba(255,215,0,0.3)] mx-4 max-h-[80vh] overflow-y-auto">
             <h2 class="text-3xl font-bold mb-6 text-yellow-300">게임 방법</h2>
             <div class="text-left text-xl leading-relaxed space-y-5 mb-8 text-white font-normal">
-                <p>1. 주문서에 적힌 분수만큼 물약을 정확히 채워주세요!</p>
+                <p>1. 레시피에 적힌 분수만큼 물약을 정확히 채워주세요!</p>
                 <p>2. 오른쪽 재료 버튼을 눌러 물약을 넣을 수 있어요.</p>
                 <p>3. 정확히 채우면 성공, 너무 많이 넣으면 실패해요.</p>
             </div>
@@ -222,7 +218,7 @@
     <!-- Game Screen -->
     <div id="app" class="w-full max-w-5xl bg-white/10 rounded-3xl p-3 sm:p-6 md:p-10 backdrop-blur-md shadow-2xl border border-white/20 mt-0 sm:mt-4 hidden">
         <header class="text-center mb-4 sm:mb-6 md:mb-10 flex flex-col items-center">
-            <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-yellow-300 drop-shadow-lg mb-2 sm:mb-4">마법 물약 상점 🧪</h1>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-yellow-300 drop-shadow-lg mb-2 sm:mb-4">마법의 분수 공방 🧪</h1>
             <div class="flex flex-col gap-2 sm:gap-4 w-full max-w-xl items-center">
                 <!-- Row 1: Level and Lives -->
                 <div class="flex items-center justify-center gap-3 sm:gap-4 w-full">
@@ -246,7 +242,7 @@
         <main class="flex flex-col md:flex-row gap-4 sm:gap-6 md:gap-8 items-center md:items-stretch justify-center">
             <!-- Order Book -->
             <aside class="order-1 bg-black/40 rounded-2xl p-4 sm:p-6 border border-white/20 shadow-xl flex-1 w-full md:w-auto flex flex-col items-center justify-center min-h-[140px] sm:min-h-[200px]">
-                <h3 class="text-yellow-400 text-2xl sm:text-3xl mb-3 sm:mb-6 text-center drop-shadow-md">📜 주문서</h3>
+                <h3 class="text-yellow-400 text-2xl sm:text-3xl mb-3 sm:mb-6 text-center drop-shadow-md">📜 레시피</h3>
                 <p id="target-text" class="text-xl sm:text-2xl text-center leading-relaxed font-bold">
                     물약을 ... 만큼 정확히 채워주세요!
                 </p>

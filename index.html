@@ -144,25 +144,16 @@
         /* Mobile Responsive */
         @media (max-width: 768px) {
             #bottle-body {
-                width: 130px;
-                height: 180px; /* Further reduced height for mobile */
+                width: 150px;
+                height: 220px;
             }
             #bottle-neck {
-                width: 50px;
-                height: 30px;
+                width: 52px;
+                height: 32px;
             }
             #bottle-neck::after {
                 top: -10px; left: -12px; right: -12px;
                 height: 14px;
-            }
-            .marking-label {
-                right: -55px;
-                font-size: 0.8rem;
-            }
-            /* Alternate markings left and right on mobile */
-            .marking:nth-child(odd) .marking-label {
-                left: -55px;
-                right: auto;
             }
             #app {
                 padding: 0.75rem !important;
@@ -634,8 +625,8 @@
         let timeLeft = TIME_LIMIT;
         let lives = 3;
         let roundLocked = false;
-        let allLevelsMixed = true;
-        let currentLevelUsedIngredients = new Set();
+        let mixedLevels = new Set();
+        let currentLevelIngredients = new Set();
 
         function renderFraction(n, d) {
             if (n === d && n === 1) return `<span style="font-size: 1.2em; font-weight: 900; vertical-align: middle; margin: 0 4px;">가득(1)</span>`;
@@ -717,6 +708,8 @@
         function resetGameState() {
             currentLevelIndex = 0;
             lives = 3;
+            mixedLevels = new Set();
+            currentLevelIngredients = new Set();
             updateLivesUI();
             stopBGM();
             playBGM();
@@ -726,54 +719,94 @@
         function loadLevel(index) {
             const level = levels[index];
             roundLocked = false;
+            currentLevelIngredients = new Set();
             document.getElementById('level-title').innerText = `레벨 ${index + 1}`;
             updateLivesUI();
             
             const isFull = (level.target.n === level.target.d);
-            if (isFull) {
-                document.getElementById('target-text').innerHTML = `재료를 <span class="text-yellow-300 mx-1 text-3xl">${renderFraction(level.target.n, level.target.d)}</span><br>채워주세요!`;
-            } else {
-                document.getElementById('target-text').innerHTML = `재료를 <span class="text-yellow-300 mx-1 text-3xl">${renderFraction(level.target.n, level.target.d)}</span> 만큼<br>정확히 채워주세요!`;
-            }
+            const suffix = isFull ? '<br>' : ' 만큼<br>정확히 ';
+            document.getElementById('target-text').innerHTML = `재료를 <span class="text-yellow-300 mx-1 text-3xl">${renderFraction(level.target.n, level.target.d)}</span>${suffix}채워주세요!`;
             
             const markingsContainer = document.getElementById('markings-container');
             markingsContainer.innerHTML = '';
+            const isMobile = window.innerWidth <= 768;
+            
+            // 표시할 눈금들을 먼저 결정 (좌우 번갈아 배치를 위해)
+            const labelsToShow = [];
+            for (let i = 0; i < level.markings - 1; i++) {
+                const markNum = level.markings - 1 - i;
+                const isTargetMark = (Math.abs(markNum / level.markings - level.target.n / level.target.d) < 0.001);
+                
+                let shouldShow;
+                if (level.markings <= 6) {
+                    shouldShow = true; // 적은 눈금은 모두 표시
+                } else if (level.markings <= 8) {
+                    shouldShow = true; // 8개도 모두 표시
+                } else {
+                    // 10, 12개 눈금: 데스크탑은 짝수+정답, 모바일은 모두 표시
+                    if (isMobile) {
+                        shouldShow = true;
+                    } else {
+                        shouldShow = (markNum % 2 === 0) || isTargetMark;
+                    }
+                }
+                
+                if (shouldShow) {
+                    labelsToShow.push({ index: i, markNum: markNum, isTargetMark: isTargetMark });
+                }
+            }
+            
+            // 실제 눈금 div 생성
             for (let i = 0; i < level.markings; i++) {
                 const mark = document.createElement('div');
                 mark.className = 'marking';
-                if (i < level.markings - 1) {
-                    const markNum = level.markings - 1 - i; 
-                    
-                    // 만약 눈금 수가 10개 이상으로 많다면 가독성을 위해 짝수 눈금이나 정답 타겟 눈금만 분수로 보여줍니다.
-                    const isTargetMark = (markNum / level.markings === level.target.n / level.target.d);
-                    const shouldShowLabel = (level.markings < 10) || (markNum % 2 === 0) || isTargetMark;
-                    
-                    if (shouldShowLabel) {
-                        const label = document.createElement('div');
-                        label.className = 'marking-label';
-                        label.innerHTML = renderFraction(markNum, level.markings);
-                        
-                        if (level.markings >= 10) {
-                            label.style.fontSize = '0.75rem';
-                            label.style.padding = '1px 3px';
-                            label.style.bottom = '-10px';
-                            label.style.right = '-65px';
-                            if (isTargetMark) {
-                                // 정답 눈금은 눈에 띄게 테두리를 노랗게 돋보여줍니다.
-                                label.style.borderColor = '#facc15';
-                                label.style.borderWidth = '2px';
-                                label.style.color = '#facc15';
-                            }
-                        } else if (level.markings >= 8) {
-                            label.style.fontSize = '0.85rem';
-                            label.style.padding = '1px 4px';
-                            label.style.bottom = '-12px';
-                        }
-                        mark.appendChild(label);
-                    }
-                }
                 markingsContainer.appendChild(mark);
             }
+            
+            // 표시 대상 눈금만 라벨 추가, 좌우 번갈아 배치 (모바일)
+            labelsToShow.forEach((item, displayIdx) => {
+                const mark = markingsContainer.children[item.index];
+                const label = document.createElement('div');
+                label.className = 'marking-label';
+                label.innerHTML = renderFraction(item.markNum, level.markings);
+                
+                if (isMobile) {
+                    // 모바일: 좌우 번갈아 배치 (표시되는 라벨 순서 기준)
+                    label.style.fontSize = '0.72rem';
+                    label.style.padding = '1px 3px';
+                    label.style.bottom = '-8px';
+                    if (displayIdx % 2 === 0) {
+                        // 오른쪽
+                        label.style.right = '-58px';
+                        label.style.left = 'auto';
+                    } else {
+                        // 왼쪽
+                        label.style.left = '-58px';
+                        label.style.right = 'auto';
+                    }
+                } else {
+                    // 데스크탑: 기존 오른쪽 고정 스타일
+                    if (level.markings >= 10) {
+                        label.style.fontSize = '0.75rem';
+                        label.style.padding = '1px 3px';
+                        label.style.bottom = '-10px';
+                        label.style.right = '-65px';
+                    } else if (level.markings >= 8) {
+                        label.style.fontSize = '0.85rem';
+                        label.style.padding = '1px 4px';
+                        label.style.bottom = '-12px';
+                    }
+                }
+                
+                if (item.isTargetMark) {
+                    // 정답 눈금은 노란 테두리로 강조
+                    label.style.borderColor = '#facc15';
+                    label.style.borderWidth = '2px';
+                    label.style.color = '#facc15';
+                }
+                
+                mark.appendChild(label);
+            });
             
             const btnContainer = document.getElementById('buttons-container');
             btnContainer.innerHTML = '';
@@ -793,11 +826,9 @@
         function addLiquid(ing) {
             if (roundLocked) return;
             playSound('pour');
+            currentLevelIngredients.add(`${ing.n}/${ing.d}`);
             const value = ing.n / ing.d;
             currentAmount += value;
-            
-            // Track distinct ingredients used in this level
-            currentLevelUsedIngredients.add(`${ing.n}/${ing.d}_${ing.color}`);
             
             const liquidContainer = document.getElementById('liquid-container');
             const liquid = document.createElement('div');
@@ -825,7 +856,6 @@
         function resetBottle() {
             currentAmount = 0;
             document.getElementById('liquid-container').innerHTML = '';
-            currentLevelUsedIngredients.clear();
         }
 
         function showModal(msg, isRetry, isGameClear = false) {
@@ -906,21 +936,23 @@
             const targetAmount = level.target.n / level.target.d;
             
             if (Math.abs(currentAmount - targetAmount) < 0.001) {
-                // 서로 다른 종류의 재료를 2개 이상 섞었는지 확인
-                if (currentLevelUsedIngredients.size <= 1) {
-                    allLevelsMixed = false;
-                }
-
                 playSound('success');
+                
+                // Track if this level was cleared with 2+ different ingredient types
+                if (currentLevelIngredients.size >= 2) {
+                    mixedLevels.add(currentLevelIndex);
+                }
+                
                 if (currentLevelIndex >= levels.length - 1) {
                     createFinalSparkles();
                     stopBGM();
                     playSound('gameclear');
-                    
-                    if (allLevelsMixed) {
+                    // Check if ALL levels were cleared with mixed ingredients
+                    const allMixed = mixedLevels.size === levels.length;
+                    if (allMixed) {
                         showModal("완벽해!\n분수를 완벽하게\n마스터했어!", false, true);
                     } else {
-                        showModal("대단해!\n모든 레벨을 클리어했어!\n다음엔 여러 분수를\n섞어서 클리어 해보자.", false, true);
+                        showModal("대단해!\n모든 레벨을 클리어했어!\n다음엔 여러 분수를 섞어서\n클리어 해보자.", false, true);
                     }
                 } else {
                     createSparkles();
@@ -943,7 +975,8 @@
             currentLevelIndex = 0;
             lives = 3;
             roundLocked = false;
-            allLevelsMixed = true; // 게임 시작 시 초기화
+            mixedLevels = new Set();
+            currentLevelIngredients = new Set();
             updateLivesUI();
             playBGM();
             loadLevel(0);
@@ -957,7 +990,6 @@
             currentLevelIndex = 0;
             lives = 3;
             roundLocked = false;
-            allLevelsMixed = true;
             updateLivesUI();
             resetBottle();
         }

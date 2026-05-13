@@ -144,12 +144,12 @@
         /* Mobile Responsive */
         @media (max-width: 768px) {
             #bottle-body {
-                width: 150px;
-                height: 220px;
+                width: 135px;
+                height: 195px;
             }
             #bottle-neck {
-                width: 52px;
-                height: 32px;
+                width: 48px;
+                height: 28px;
             }
             #bottle-neck::after {
                 top: -10px; left: -12px; right: -12px;
@@ -167,6 +167,18 @@
             /* 모바일: 레시피/재료 제목 숨김 */
             #app aside h3 {
                 display: none !important;
+            }
+            /* 모바일: 문제 박스 세로 크기 축소 */
+            #app main > aside:first-child {
+                min-height: 76px !important;
+                padding: 0.65rem 0.85rem !important;
+            }
+            #target-text {
+                font-size: 1.05rem !important;
+                line-height: 1.25 !important;
+            }
+            #target-text .text-3xl {
+                font-size: 1.45rem !important;
             }
         }
 
@@ -732,12 +744,17 @@
             updateLivesUI();
             
             const isFull = (level.target.n === level.target.d);
-            const suffix = isFull ? '<br>' : ' 만큼<br>정확히 ';
-            document.getElementById('target-text').innerHTML = `재료를 <span class="text-yellow-300 mx-1 text-3xl">${renderFraction(level.target.n, level.target.d)}</span>${suffix}채워주세요!`;
+            const isMobile = window.innerWidth <= 768;
+            const fractionText = `<span class="text-yellow-300 mx-1 text-3xl">${renderFraction(level.target.n, level.target.d)}</span>`;
+            if (isMobile) {
+                document.getElementById('target-text').innerHTML = `${fractionText} 만큼 채워주세요!`;
+            } else {
+                const suffix = isFull ? '<br>' : ' 만큼<br>정확히 ';
+                document.getElementById('target-text').innerHTML = `재료를 ${fractionText}${suffix}채워주세요!`;
+            }
             
             const markingsContainer = document.getElementById('markings-container');
             markingsContainer.innerHTML = '';
-            const isMobile = window.innerWidth <= 768;
             
             // 표시할 눈금들을 먼저 결정 (좌우 번갈아 배치를 위해)
             const labelsToShow = [];
